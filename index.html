@@ -218,8 +218,8 @@
           </h3>
         </div>
 
-        <!-- Students Cards Grid (Compact List) -->
-        <div id="studentsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        <!-- Students Cards Grid (Compact List with Attendance & Profile Click) -->
+        <div id="studentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
 
         <!-- Empty State -->
         <div id="emptyState" class="hidden text-center py-12 bg-slate-800 dark:bg-slate-900 rounded-2xl border border-slate-700">
@@ -279,6 +279,52 @@
   <footer class="py-4 border-t border-slate-800 text-center text-xs text-slate-400 tracking-wider">
     Created by Omar Hadwa
   </footer>
+
+  <!-- Modal: Attendance & Quiz -->
+  <div id="attendanceModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-user text-amber-400"></i> تسجيل حضور وتسميع
+        </h3>
+        <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="attendanceForm" onsubmit="handleAttendanceSubmit(event)" class="space-y-4">
+        <input type="hidden" id="attStudentId">
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">اسم الطالب</label>
+          <input type="text" id="attStudentName" disabled class="w-full p-2.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">الحالة</label>
+            <select id="attStatus" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
+              <option value="present">حاضر ✓</option>
+              <option value="absent">غائب ✗</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">درجة التسميع (اختياري)</label>
+            <input type="text" id="attQuizGrade" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none" placeholder="مثال: 9/10">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">تاريخ الحصة</label>
+          <input type="date" id="attDate" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
+          <button type="button" onclick="closeAttendanceModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
+          <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">حفظ الحصة</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Modal: Add Student -->
   <div id="addStudentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
@@ -716,11 +762,14 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-2 space-x-reverse flex-shrink-0">
+          <div class="flex items-center space-x-2 space-x-reverse flex-shrink-0" onclick="event.stopPropagation()">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ratio >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">
               ${ratio}%
             </span>
-            <button onclick="event.stopPropagation(); deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 p-1.5 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            <button onclick="openAttendanceModal('${s.id}')" title="تسجيل حضور وتسميع" class="bg-slate-700/80 hover:bg-slate-700 text-amber-400 p-2 rounded-xl text-xs font-bold transition flex items-center justify-center">
+              <i class="fa-solid fa-clipboard-user"></i>
+            </button>
+            <button onclick="deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 p-1.5 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -788,6 +837,44 @@
 
     function closeProfileModal() {
       document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function openAttendanceModal(studentId) {
+      const student = studentsData.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('attStudentId').value = studentId;
+      document.getElementById('attStudentName').value = student.name;
+      document.getElementById('attQuizGrade').value = '';
+      document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('attendanceModal').classList.remove('hidden');
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById('attendanceModal').classList.add('hidden');
+    }
+
+    async function handleAttendanceSubmit(e) {
+      e.preventDefault();
+      const studentId = document.getElementById('attStudentId').value;
+      const status = document.getElementById('attStatus').value;
+      const quiz = document.getElementById('attQuizGrade').value.trim();
+      const date = document.getElementById('attDate').value;
+
+      const student = studentsData.find(s => s.id === studentId);
+      if (student) {
+        if (!student.attendance) student.attendance = [];
+        student.attendance.push({
+          status,
+          quiz: quiz || null,
+          date
+        });
+
+        renderStudents();
+        closeAttendanceModal();
+        await saveStudentToSupabase(student);
+      }
     }
 
     function openAddStudentModal() {
