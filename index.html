@@ -230,6 +230,52 @@
     </div>
   </div>
 
+  <!-- Modal: Student Full Profile -->
+  <div id="profileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-700 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3 flex-shrink-0">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2 text-base">
+          <i class="fa-solid fa-id-card text-amber-400"></i> ملف الطالب الشخصي
+        </h3>
+        <button onclick="closeProfileModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex-grow overflow-y-auto space-y-5 pr-1">
+        <!-- Student Info Header -->
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 id="profStudentName" class="text-lg font-bold text-white"></h2>
+              <p id="profStudentGroup" class="text-xs text-amber-400 mt-0.5"></p>
+            </div>
+            <span id="profGradeBadge" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700"></span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-xs text-slate-300 border-t border-slate-800">
+            <div><i class="fa-solid fa-phone text-slate-500 ml-1"></i> ولي الأمر: <strong id="profParentPhone" class="text-white"></strong></div>
+            <div><i class="fa-solid fa-mobile-screen text-slate-500 ml-1"></i> الطالب: <strong id="profStudentPhone" class="text-white"></strong></div>
+            <div><i class="fa-solid fa-money-bill-wave text-slate-500 ml-1"></i> الاشتراك المطلوب: <strong id="profFee" class="text-amber-400"></strong></div>
+          </div>
+        </div>
+
+        <!-- Attendance & Quizzes History -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-indigo-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+            <i class="fa-solid fa-clipboard-user"></i> سجل الحضور والتسميع
+          </h4>
+          <div id="profAttendanceList" class="space-y-1.5"></div>
+        </div>
+
+        <!-- Payments History -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+            <i class="fa-solid fa-money-check-dollar"></i> سجل المدفوعات الشهرية
+          </h4>
+          <div id="profPaymentsList" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="py-4 border-t border-slate-800 text-center text-xs text-slate-400 tracking-wider">
     Created by Omar Hadwa
   </footer>
@@ -729,12 +775,12 @@
           <div class="flex items-start justify-between">
             <div>
               <div class="flex items-center gap-2">
-                <h4 class="font-bold text-white text-base">${s.name}</h4>
+                <button onclick="openProfileModal('${s.id}')" class="font-bold text-white text-base hover:text-amber-400 transition text-right underline decoration-amber-500/50 decoration-2 underline-offset-4">${s.name}</button>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ratio >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">
                   حضور ${ratio}%
                 </span>
               </div>
-              <p class="text-xs text-amber-400 mt-0.5"><i class="fa-solid fa-clock text-[10px] ml-1"></i>${s.group_name || 'بدون مجموعة'}</p>
+              <p class="text-xs text-amber-400 mt-1"><i class="fa-solid fa-clock text-[10px] ml-1"></i>${s.group_name || 'بدون مجموعة'}</p>
             </div>
             <button onclick="deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash-can text-sm"></i></button>
           </div>
@@ -762,6 +808,69 @@
         `;
         grid.appendChild(card);
       });
+    }
+
+    // Student Profile Modal Logic
+    function openProfileModal(studentId) {
+      const student = studentsData.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('profStudentName').textContent = student.name;
+      document.getElementById('profStudentGroup').textContent = student.group_name || 'بدون مجموعة';
+      document.getElementById('profGradeBadge').textContent = gradeNames[student.grade];
+      document.getElementById('profParentPhone').textContent = student.parent_phone;
+      document.getElementById('profStudentPhone').textContent = student.student_phone || 'غير مسجل';
+      document.getElementById('profFee').textContent = `${student.fee || 150} ج.م`;
+
+      // Attendance List
+      const attContainer = document.getElementById('profAttendanceList');
+      attContainer.innerHTML = '';
+      const attendance = student.attendance || [];
+      if (attendance.length === 0) {
+        attContainer.innerHTML = '<p class="text-xs text-slate-500 italic p-2 bg-slate-900/40 rounded-lg">لا توجد سجلات حضور أو تسميع مسجلة بعد.</p>';
+      } else {
+        attendance.slice().reverse().forEach(att => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs';
+          div.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full ${att.status === 'present' ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+              <span class="font-bold text-slate-200">${att.status === 'present' ? 'حاضر' : 'غائب'}</span>
+              <span class="text-slate-400 text-[11px]">(${att.date})</span>
+            </div>
+            ${att.quiz ? `<span class="bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800/60 font-bold">تسميع: ${att.quiz}</span>` : '<span class="text-slate-500 text-[10px]">بدون تسميع</span>'}
+          `;
+          attContainer.appendChild(div);
+        });
+      }
+
+      // Payments History List
+      const payContainer = document.getElementById('profPaymentsList');
+      payContainer.innerHTML = '';
+      const payments = student.payments || {};
+      for (let m = 1; m <= 12; m++) {
+        const pay = payments[m];
+        const isPaid = pay && pay.is_paid;
+        const paidAmount = isPaid ? (pay.amount || student.fee || 150) : 0;
+        const payDate = isPaid && pay.date ? new Date(pay.date).toLocaleDateString('ar-EG', {month: 'numeric', day: 'numeric'}) : '';
+
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-xl border text-xs flex flex-col justify-between ${isPaid ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300' : 'bg-slate-900/40 border-slate-800 text-slate-500'}`;
+        div.innerHTML = `
+          <div class="flex justify-between font-bold">
+            <span>شهر ${m}</span>
+            <span>${isPaid ? `${paidAmount} ج.م` : 'غير مدفوع'}</span>
+          </div>
+          <span class="text-[10px] mt-1 text-slate-400">${isPaid ? `✓ ${payDate}` : '—'}</span>
+        `;
+        payContainer.appendChild(div);
+      }
+
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
     }
 
     function openAttendanceModal(studentId) {
@@ -912,7 +1021,7 @@
         const isPaid = payments[month] && payments[month].is_paid;
 
         if (isPaid) {
-          paidList.path ? paidList.push(s) : paidList.push(s);
+          paidList.push(s);
         } else {
           const unpaidMonths = [];
           for (let m = 1; m <= month; m++) {
