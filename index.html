@@ -470,7 +470,6 @@
       initTheme();
     });
 
-    // Sidebar & Settings Logic
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
@@ -686,12 +685,10 @@
         const payments = s.payments || {};
         const attendance = s.attendance || [];
         
-        // Attendance Ratio
         const totalSessions = attendance.length;
         const presentCount = attendance.filter(a => a.status === 'present').length;
         const ratio = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 100;
         
-        // Latest Quiz Grade
         const latestQuiz = attendance.slice().reverse().find(a => a.quiz);
 
         let monthsHtml = '';
@@ -753,7 +750,6 @@
       });
     }
 
-    // Attendance Modal Logic
     function openAttendanceModal(studentId) {
       const student = studentsData.find(s => s.id === studentId);
       if (!student) return;
@@ -935,7 +931,7 @@
               <div class="text-red-400 mt-0.5">الشهور المستحقة عليه: <strong>شهر ${monthsText}</strong></div>
               <div class="text-slate-400 text-[11px]">ولي الأمر: ${s.parent_phone}</div>
             </div>
-            <a href="https://wa.me/2${s.parent_phone}?text=${message}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg flex items-center space-x-1 space-x-reverse transition">
+            <a href="https://wa.me/2${s.parent_phone}?text=${message}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-lg flex items-center space-x-1 space-x-reverse transition">
               <i class="fa-brands fa-whatsapp"></i>
               <span>تنبيه واتساب</span>
             </a>
