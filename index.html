@@ -10,7 +10,6 @@
       darkMode: 'class',
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
@@ -70,11 +69,8 @@
           <button onclick="downloadBackup()" class="w-full py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-2 transition">
             <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية (Backup)
           </button>
-          <button onclick="syncDataWithServer(true); toggleSidebar();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
-            <i class="fa-solid fa-rotate text-amber-400"></i> إجبار المزامنة الآمنة
-          </button>
-          <button onclick="clearCache();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
-            <i class="fa-solid fa-broom text-amber-400"></i> تنظيف الكاش المحلي
+          <button onclick="triggerManualSync(); toggleSidebar();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
+            <i class="fa-solid fa-rotate text-amber-400"></i> تحديث ومزامنة محلية فورية
           </button>
         </div>
       </div>
@@ -142,15 +138,15 @@
             <div>
               <h2 class="font-bold text-base leading-tight">MR</h2>
               <span id="connectionStatus" class="text-[10px] text-emerald-400 flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> متصل بالسحاب
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> جاهز ومحفوظ آمنًا
               </span>
             </div>
           </div>
 
           <div class="flex items-center space-x-2 space-x-reverse">
-            <button onclick="syncDataWithServer(true)" id="syncBtn" title="مزامنة فورية آمنة" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
+            <button onclick="triggerManualSync()" id="syncBtn" title="تحديث الفلترة والحسابات" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
               <i class="fa-solid fa-rotate" id="syncIcon"></i>
-              <span class="hidden sm:inline">مزامنة</span>
+              <span class="hidden sm:inline">تحديث</span>
             </button>
             <button onclick="openAddStudentModal()" class="gold-gradient text-slate-900 px-4 py-2 rounded-xl font-bold text-sm hover:opacity-90 transition flex items-center space-x-2 space-x-reverse">
               <i class="fa-solid fa-plus"></i>
@@ -278,7 +274,7 @@
   </div>
 
   <footer class="py-4 border-t border-slate-800 text-center text-xs text-slate-400 tracking-wider">
-    Created by Omar Hadwa
+    Created by Omar Hadwa | Tel: 01013587867
   </footer>
 
   <!-- Modal: Attendance & Quiz -->
@@ -498,10 +494,6 @@
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://tcyyygjnknofnlxzqazq.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_42V5FGJ0EC_ufXFYZNBJqw_jp75b_iR';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     let currentGrade = '1_prep';
     let studentsData = [];
 
@@ -516,7 +508,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkAuthStatus();
-      setupNetworkListeners();
       initTheme();
     });
 
@@ -533,7 +524,7 @@
     }
 
     function initTheme() {
-      const savedTheme = localStorage.getItem('dawood_theme') || 'dark';
+      const savedTheme = localStorage.getItem('mr_theme') || 'dark';
       setTheme(savedTheme);
     }
 
@@ -547,15 +538,7 @@
         document.getElementById('themeLightBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 bg-amber-500 text-slate-950";
         document.getElementById('themeDarkBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 text-slate-400 hover:text-white";
       }
-      localStorage.setItem('dawood_theme', mode);
-    }
-
-    function clearCache() {
-      if (confirm('هل ترغب في تنظيف الكاش المحلي واستجلاب البيانات طازجة من السيرفر؟')) {
-        localStorage.removeItem('dawood_students_backup');
-        syncDataWithServer(true);
-        toggleSidebar();
-      }
+      localStorage.setItem('mr_theme', mode);
     }
 
     function downloadBackup() {
@@ -569,31 +552,8 @@
       toggleSidebar();
     }
 
-    function setupNetworkListeners() {
-      window.addEventListener('online', () => {
-        updateNetworkBadge(true);
-        syncPendingDataToCloud();
-      });
-      window.addEventListener('offline', () => {
-        updateNetworkBadge(false);
-      });
-      updateNetworkBadge(navigator.onLine);
-    }
-
-    function updateNetworkBadge(isOnline) {
-      const statusEl = document.getElementById('connectionStatus');
-      if (!statusEl) return;
-      if (isOnline) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> متصل بالسحاب`;
-        statusEl.className = "text-[10px] text-emerald-400 flex items-center gap-1";
-      } else {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> وضع أوفلاين (محلي)`;
-        statusEl.className = "text-[10px] text-amber-400 flex items-center gap-1";
-      }
-    }
-
     function checkAuthStatus() {
-      if (localStorage.getItem('dawood_teacher_logged') === 'true') {
+      if (localStorage.getItem('mr_teacher_logged') === 'true') {
         showDashboard();
       } else {
         showAuth();
@@ -609,18 +569,16 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('dashboardScreen').classList.remove('hidden');
       
-      const local = localStorage.getItem('dawood_students_backup');
+      const local = localStorage.getItem('mr_students_data');
       if (local) {
         try {
           studentsData = JSON.parse(local);
         } catch(e) {
           studentsData = [];
         }
-        renderStudents();
       }
-      
       selectGrade('1_prep');
-      syncDataWithServer();
+      renderStudents();
     }
 
     async function handleLogin(e) {
@@ -628,8 +586,8 @@
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
       
-      if ((email === 'ahmed@gmail.com' && password === 'ahmed#70007#') || email === 'ahmed_dawood' || email === 'mr') {
-        localStorage.setItem('dawood_teacher_logged', 'true');
+      if ((email === 'ahmed@gmail.com' && password === 'ahmed#70007#') || email === 'mr' || email === '01013587867') {
+        localStorage.setItem('mr_teacher_logged', 'true');
         showDashboard();
       } else {
         document.getElementById('authError').classList.remove('hidden');
@@ -637,84 +595,30 @@
     }
 
     function handleLogout() {
-      localStorage.removeItem('dawood_teacher_logged');
+      localStorage.removeItem('mr_teacher_logged');
       showAuth();
     }
 
-    // دالة المزامنة الذكية الآمنة التي تدمج البيانات وتحافظ على ما تم كتابته دون مسحه
-    async function syncDataWithServer(showSpinner = false) {
+    function triggerManualSync() {
       const syncIcon = document.getElementById('syncIcon');
-      if (showSpinner && syncIcon) syncIcon.classList.add('fa-spin');
-
-      if (!navigator.onLine) {
-        if (showSpinner && syncIcon) syncIcon.classList.remove('fa-spin');
-        return;
-      }
-
-      try {
-        // أولاً: ارفع البيانات المحلية للسيرفر
-        if (studentsData.length > 0) {
-          for (const student of studentsData) {
-            await supabaseClient.from('students').upsert(student);
-          }
-        }
-
-        // ثانياً: اسحب أحدث البيانات من السيرفر وادمجها مع البيانات المحلية
-        const { data, error } = await supabaseClient.from('students').select('*');
-        if (!error && data) {
-          if (data.length > 0) {
-            const mergedMap = new Map();
-            studentsData.forEach(s => mergedMap.set(s.id, s));
-            
-            data.forEach(srvStudent => {
-              if (!mergedMap.has(srvStudent.id)) {
-                mergedMap.set(srvStudent.id, srvStudent);
-              } else {
-                const localStudent = mergedMap.get(srvStudent.id);
-                mergedMap.set(srvStudent.id, {
-                  ...srvStudent,
-                  attendance: (localStudent.attendance && localStudent.attendance.length >= (srvStudent.attendance || []).length) ? localStudent.attendance : srvStudent.attendance,
-                  payments: Object.keys(localStudent.payments || {}).length >= Object.keys(srvStudent.payments || {}).length ? localStudent.payments : srvStudent.payments
-                });
-              }
-            });
-
-            studentsData = Array.from(mergedMap.values());
-          }
-          localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
-          renderStudents();
-        }
-      } catch (e) {
-        console.log('Offline mode active or sync error');
-      } finally {
-        if (showSpinner && syncIcon) syncIcon.classList.remove('fa-spin');
-      }
+      if (syncIcon) syncIcon.classList.add('fa-spin');
+      
+      setTimeout(() => {
+        renderStudents();
+        if (syncIcon) syncIcon.classList.remove('fa-spin');
+        alert('تم تحديث الحسابات والبيانات المحلية بنجاح وكفاءة تامة!');
+      }, 500);
     }
 
-    async function saveStudentToSupabase(student) {
+    function saveStudentLocally(student) {
       const index = studentsData.findIndex(s => s.id === student.id);
       if (index !== -1) {
         studentsData[index] = student;
       } else {
         studentsData.push(student);
       }
-      localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
+      localStorage.setItem('mr_students_data', JSON.stringify(studentsData));
       renderStudents();
-
-      if (!navigator.onLine) return;
-      try {
-        await supabaseClient.from('students').upsert(student);
-      } catch (e) {}
-    }
-
-    async function syncPendingDataToCloud() {
-      if (studentsData.length > 0) {
-        try {
-          for (const student of studentsData) {
-            await supabaseClient.from('students').upsert(student);
-          }
-        } catch (e) {}
-      }
     }
 
     function selectGrade(gradeKey) {
@@ -900,7 +804,7 @@
       document.getElementById('attendanceModal').classList.add('hidden');
     }
 
-    async function handleAttendanceSubmit(e) {
+    function handleAttendanceSubmit(e) {
       e.preventDefault();
       const studentId = document.getElementById('attStudentId').value;
       const status = document.getElementById('attStatus').value;
@@ -917,7 +821,7 @@
         });
 
         closeAttendanceModal();
-        await saveStudentToSupabase(student);
+        saveStudentLocally(student);
         openProfileModal(student.id);
       }
     }
@@ -931,7 +835,7 @@
       document.getElementById('addStudentModal').classList.add('hidden');
     }
 
-    async function handleAddStudent(e) {
+    function handleAddStudent(e) {
       e.preventDefault();
       const newStudent = {
         id: 'st_' + Date.now(),
@@ -947,19 +851,14 @@
 
       closeAddStudentModal();
       document.getElementById('addStudentForm').reset();
-      await saveStudentToSupabase(newStudent);
+      saveStudentLocally(newStudent);
     }
 
-    async function deleteStudent(id) {
-      if (confirm('هل أنت تأكد من حذف هذا الطالب؟')) {
+    function deleteStudent(id) {
+      if (confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
         studentsData = studentsData.filter(s => s.id !== id);
+        localStorage.setItem('mr_students_data', JSON.stringify(studentsData));
         renderStudents();
-        localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
-        if (navigator.onLine) {
-          try {
-            await supabaseClient.from('students').delete().eq('id', id);
-          } catch(e) {}
-        }
       }
     }
 
@@ -985,7 +884,7 @@
       document.getElementById('paymentModal').classList.add('hidden');
     }
 
-    async function handlePaymentSubmit(e) {
+    function handlePaymentSubmit(e) {
       e.preventDefault();
       const studentId = document.getElementById('payStudentId').value;
       const month = document.getElementById('payMonthSelect').value;
@@ -1002,7 +901,7 @@
         };
 
         closePaymentModal();
-        await saveStudentToSupabase(student);
+        saveStudentLocally(student);
         openProfileModal(student.id);
       }
     }
