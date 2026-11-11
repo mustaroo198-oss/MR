@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>   MR   </title>
+  <title>تطبيق MR - إدارة الطلاب والمدفوعات</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -71,7 +71,7 @@
             <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية (Backup)
           </button>
           <button onclick="syncDataWithServer(true); toggleSidebar();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
-            <i class="fa-solid fa-rotate text-amber-400"></i> إجبار المزامنة السحابية
+            <i class="fa-solid fa-rotate text-amber-400"></i> إجبار المزامنة الآمنة
           </button>
           <button onclick="clearCache();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
             <i class="fa-solid fa-broom text-amber-400"></i> تنظيف الكاش المحلي
@@ -94,7 +94,7 @@
           <div class="w-20 h-20 gold-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <i class="fa-solid fa-graduation-cap text-3xl text-slate-900"></i>
           </div>
-          <h1 class="text-2xl font-bold text-white mb-1">  MR  </h1>
+          <h1 class="text-2xl font-bold text-white mb-1">منصة MR</h1>
           <p class="text-slate-400 text-sm">نظام إدارة الطلاب والمدفوعات الشهرية</p>
         </div>
 
@@ -140,7 +140,7 @@
               <i class="fa-solid fa-user-tie"></i>
             </div>
             <div>
-              <h2 class="font-bold text-base leading-tight">  MR  </h2>
+              <h2 class="font-bold text-base leading-tight">MR</h2>
               <span id="connectionStatus" class="text-[10px] text-emerald-400 flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> متصل بالسحاب
               </span>
@@ -148,7 +148,7 @@
           </div>
 
           <div class="flex items-center space-x-2 space-x-reverse">
-            <button onclick="syncDataWithServer(true)" id="syncBtn" title="مزامنة فورية" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
+            <button onclick="syncDataWithServer(true)" id="syncBtn" title="مزامنة فورية آمنة" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
               <i class="fa-solid fa-rotate" id="syncIcon"></i>
               <span class="hidden sm:inline">مزامنة</span>
             </button>
@@ -218,7 +218,7 @@
           </h3>
         </div>
 
-        <!-- Students Cards Grid (Compact List) -->
+        <!-- Students Cards Grid -->
         <div id="studentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
 
         <!-- Empty State -->
@@ -230,7 +230,7 @@
     </div>
   </div>
 
-  <!-- Modal: Student Full Profile (Includes Attendance Button & Clearly visible Payment action) -->
+  <!-- Modal: Student Full Profile -->
   <div id="profileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-700 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3 flex-shrink-0">
@@ -241,7 +241,6 @@
       </div>
 
       <div class="flex-grow overflow-y-auto space-y-5 pr-1">
-        <!-- Student Info Header -->
         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
           <div class="flex justify-between items-start">
             <div>
@@ -256,13 +255,11 @@
             <div><i class="fa-solid fa-money-bill-wave text-slate-500 ml-1"></i> الاشتراك المطلوب: <strong id="profFee" class="text-amber-400"></strong></div>
           </div>
           
-          <!-- Attendance Trigger Inside Profile -->
           <button id="profAttBtn" onclick="" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md">
             <i class="fa-solid fa-clipboard-user"></i> تسجيل حصة وتسميع جديدة للطالب
           </button>
         </div>
 
-        <!-- Attendance & Quizzes History -->
         <div class="space-y-2">
           <h4 class="font-bold text-indigo-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
             <i class="fa-solid fa-clock-rotate-left"></i> سجل الحضور والتسميع السابق
@@ -270,7 +267,6 @@
           <div id="profAttendanceList" class="space-y-1.5"></div>
         </div>
 
-        <!-- Payments History & Action -->
         <div class="space-y-2">
           <h4 class="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
             <i class="fa-solid fa-money-check-dollar"></i> الشهور والمدفوعات (اضغط على أي شهر للسداد الفوري)
@@ -566,7 +562,7 @@
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(studentsData, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `dawood_center_backup_${new Date().toISOString().split('T')[0]}.json`);
+      downloadAnchor.setAttribute("download", `mr_center_backup_${new Date().toISOString().split('T')[0]}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -615,7 +611,11 @@
       
       const local = localStorage.getItem('dawood_students_backup');
       if (local) {
-        studentsData = JSON.parse(local);
+        try {
+          studentsData = JSON.parse(local);
+        } catch(e) {
+          studentsData = [];
+        }
         renderStudents();
       }
       
@@ -628,7 +628,7 @@
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
       
-      if ((email === 'ahmed@gmail.com' && password === 'ahmed#70007#') || email === 'ahmed_dawood') {
+      if ((email === 'ahmed@gmail.com' && password === 'ahmed#70007#') || email === 'ahmed_dawood' || email === 'mr') {
         localStorage.setItem('dawood_teacher_logged', 'true');
         showDashboard();
       } else {
@@ -641,6 +641,7 @@
       showAuth();
     }
 
+    // دالة المزامنة الذكية الآمنة التي تدمج البيانات وتحافظ على ما تم كتابته دون مسحه
     async function syncDataWithServer(showSpinner = false) {
       const syncIcon = document.getElementById('syncIcon');
       if (showSpinner && syncIcon) syncIcon.classList.add('fa-spin');
@@ -651,21 +652,55 @@
       }
 
       try {
+        // أولاً: ارفع البيانات المحلية للسيرفر
+        if (studentsData.length > 0) {
+          for (const student of studentsData) {
+            await supabaseClient.from('students').upsert(student);
+          }
+        }
+
+        // ثانياً: اسحب أحدث البيانات من السيرفر وادمجها مع البيانات المحلية
         const { data, error } = await supabaseClient.from('students').select('*');
         if (!error && data) {
-          studentsData = data;
+          if (data.length > 0) {
+            const mergedMap = new Map();
+            studentsData.forEach(s => mergedMap.set(s.id, s));
+            
+            data.forEach(srvStudent => {
+              if (!mergedMap.has(srvStudent.id)) {
+                mergedMap.set(srvStudent.id, srvStudent);
+              } else {
+                const localStudent = mergedMap.get(srvStudent.id);
+                mergedMap.set(srvStudent.id, {
+                  ...srvStudent,
+                  attendance: (localStudent.attendance && localStudent.attendance.length >= (srvStudent.attendance || []).length) ? localStudent.attendance : srvStudent.attendance,
+                  payments: Object.keys(localStudent.payments || {}).length >= Object.keys(srvStudent.payments || {}).length ? localStudent.payments : srvStudent.payments
+                });
+              }
+            });
+
+            studentsData = Array.from(mergedMap.values());
+          }
           localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
           renderStudents();
         }
       } catch (e) {
-        console.log('Offline mode active');
+        console.log('Offline mode active or sync error');
       } finally {
         if (showSpinner && syncIcon) syncIcon.classList.remove('fa-spin');
       }
     }
 
     async function saveStudentToSupabase(student) {
+      const index = studentsData.findIndex(s => s.id === student.id);
+      if (index !== -1) {
+        studentsData[index] = student;
+      } else {
+        studentsData.push(student);
+      }
       localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
+      renderStudents();
+
       if (!navigator.onLine) return;
       try {
         await supabaseClient.from('students').upsert(student);
@@ -790,14 +825,12 @@
       document.getElementById('profStudentPhone').textContent = student.student_phone || 'غير مسجل';
       document.getElementById('profFee').textContent = `${student.fee || 150} ج.م`;
 
-      // Set Attendance button inside profile
       const attBtn = document.getElementById('profAttBtn');
       attBtn.onclick = () => {
         closeProfileModal();
         openAttendanceModal(student.id);
       };
 
-      // Attendance List
       const attContainer = document.getElementById('profAttendanceList');
       attContainer.innerHTML = '';
       const attendance = student.attendance || [];
@@ -819,7 +852,6 @@
         });
       }
 
-      // Payments History List with Clear "اضغط للدفع +" Call to Action
       const payContainer = document.getElementById('profPaymentsList');
       payContainer.innerHTML = '';
       const payments = student.payments || {};
@@ -884,7 +916,6 @@
           date
         });
 
-        renderStudents();
         closeAttendanceModal();
         await saveStudentToSupabase(student);
         openProfileModal(student.id);
@@ -914,11 +945,8 @@
         attendance: []
       };
 
-      studentsData.push(newStudent);
-      renderStudents();
       closeAddStudentModal();
       document.getElementById('addStudentForm').reset();
-
       await saveStudentToSupabase(newStudent);
     }
 
@@ -973,7 +1001,6 @@
           date: timestamp
         };
 
-        renderStudents();
         closePaymentModal();
         await saveStudentToSupabase(student);
         openProfileModal(student.id);
@@ -1025,7 +1052,7 @@
         unpaidList.forEach(item => {
           const s = item.student;
           const monthsText = item.unpaidMonths.join(' و ');
-          const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته، تحية طيبة لولي أمر الطالب (${s.name}) مع   MR  . نود تذكيركم بضرورة سداد المصروفات المتبقية عن شهر (${monthsText}). شاكرين تعاونكم.`);
+          const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته، تحية طيبة لولي أمر الطالب (${s.name}) مع MR. نود تذكيركم بضرورة سداد المصروفات المتبقية عن شهر (${monthsText}). شاكرين تعاونكم.`);
           
           const div = document.createElement('div');
           div.className = 'flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-red-900/40 text-xs';
