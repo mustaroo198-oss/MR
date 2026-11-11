@@ -64,9 +64,12 @@
           </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- Quick Actions & Backup -->
         <div class="space-y-3">
-          <label class="block text-xs font-medium text-slate-400">خيارات سريعة</label>
+          <label class="block text-xs font-medium text-slate-400">خيارات متقدمة وأمان</label>
+          <button onclick="downloadBackup()" class="w-full py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-2 transition">
+            <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية (Backup)
+          </button>
           <button onclick="syncDataWithServer(true); toggleSidebar();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
             <i class="fa-solid fa-rotate text-amber-400"></i> إجبار المزامنة السحابية
           </button>
@@ -508,6 +511,17 @@
       }
     }
 
+    function downloadBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(studentsData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `dawood_center_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      toggleSidebar();
+    }
+
     function setupNetworkListeners() {
       window.addEventListener('online', () => {
         updateNetworkBadge(true);
@@ -898,7 +912,7 @@
         const isPaid = payments[month] && payments[month].is_paid;
 
         if (isPaid) {
-          paidList.push(s);
+          paidList.path ? paidList.push(s) : paidList.push(s);
         } else {
           const unpaidMonths = [];
           for (let m = 1; m <= month; m++) {
