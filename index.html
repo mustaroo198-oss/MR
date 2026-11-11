@@ -218,7 +218,7 @@
           </h3>
         </div>
 
-        <!-- Students Cards Grid (Compact List with Attendance & Profile Click) -->
+        <!-- Students Cards Grid (Compact List) -->
         <div id="studentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
 
         <!-- Empty State -->
@@ -230,7 +230,7 @@
     </div>
   </div>
 
-  <!-- Modal: Student Full Profile -->
+  <!-- Modal: Student Full Profile (Includes Attendance Button & Payments) -->
   <div id="profileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-700 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3 flex-shrink-0">
@@ -242,7 +242,7 @@
 
       <div class="flex-grow overflow-y-auto space-y-5 pr-1">
         <!-- Student Info Header -->
-        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
           <div class="flex justify-between items-start">
             <div>
               <h2 id="profStudentName" class="text-lg font-bold text-white"></h2>
@@ -255,20 +255,25 @@
             <div><i class="fa-solid fa-mobile-screen text-slate-500 ml-1"></i> الطالب: <strong id="profStudentPhone" class="text-white"></strong></div>
             <div><i class="fa-solid fa-money-bill-wave text-slate-500 ml-1"></i> الاشتراك المطلوب: <strong id="profFee" class="text-amber-400"></strong></div>
           </div>
+          
+          <!-- Attendance Trigger Inside Profile -->
+          <button id="profAttBtn" onclick="" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md">
+            <i class="fa-solid fa-clipboard-user"></i> تسجيل حصة وتسميع جديدة للطالب
+          </button>
         </div>
 
         <!-- Attendance & Quizzes History -->
         <div class="space-y-2">
           <h4 class="font-bold text-indigo-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-            <i class="fa-solid fa-clipboard-user"></i> سجل الحضور والتسميع
+            <i class="fa-solid fa-clock-rotate-left"></i> سجل الحضور والتسميع السابق
           </h4>
           <div id="profAttendanceList" class="space-y-1.5"></div>
         </div>
 
-        <!-- Payments History -->
+        <!-- Payments History & Action -->
         <div class="space-y-2">
           <h4 class="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-            <i class="fa-solid fa-money-check-dollar"></i> سجل المدفوعات الشهرية (1 - 12)
+            <i class="fa-solid fa-money-check-dollar"></i> الشهور والمدفوعات (اضغط على الشهر للسداد أو التعديل)
           </h4>
           <div id="profPaymentsList" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         </div>
@@ -326,6 +331,60 @@
     </div>
   </div>
 
+  <!-- Modal: Record Payment -->
+  <div id="paymentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-100">تسجيل دفع شهر</h3>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="paymentForm" onsubmit="handlePaymentSubmit(event)" class="space-y-3">
+        <input type="hidden" id="payStudentId">
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">الطالب</label>
+          <input type="text" id="payStudentName" disabled class="w-full p-2.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">اختر الشهر</label>
+            <select id="payMonthSelect" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
+              <option value="1">شهر 1 (يناير)</option>
+              <option value="2">شهر 2 (فبراير)</option>
+              <option value="3">شهر 3 (مارس)</option>
+              <option value="4">شهر 4 (أبريل)</option>
+              <option value="5">شهر 5 (مايو)</option>
+              <option value="6">شهر 6 (يونيو)</option>
+              <option value="7">شهر 7 (يوليو)</option>
+              <option value="8">شهر 8 (أغسطس)</option>
+              <option value="9">شهر 9 (سبتمبر)</option>
+              <option value="10">شهر 10 (أكتوبر)</option>
+              <option value="11">شهر 11 (نوفمبر)</option>
+              <option value="12">شهر 12 (ديسمبر)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">المبلغ المدفوع (ج.م) *</label>
+            <input type="number" id="payAmountInput" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-emerald-400" placeholder="150">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">تاريخ ووقت السداد</label>
+          <input type="datetime-local" id="payTimestamp" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
+          <button type="button" onclick="closePaymentModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
+          <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">تأكيد الدفع</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: Add Student -->
   <div id="addStudentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 space-y-4 border border-slate-700">
@@ -377,60 +436,6 @@
         <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
           <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
           <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">حفظ الطالب فوراً</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal: Record Payment -->
-  <div id="paymentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700">
-      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-        <h3 class="font-bold text-slate-100">تسجيل دفع شهر</h3>
-        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-
-      <form id="paymentForm" onsubmit="handlePaymentSubmit(event)" class="space-y-3">
-        <input type="hidden" id="payStudentId">
-        
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">الطالب</label>
-          <input type="text" id="payStudentName" disabled class="w-full p-2.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 text-sm">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1">اختر الشهر</label>
-            <select id="payMonthSelect" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
-              <option value="1">شهر 1 (يناير)</option>
-              <option value="2">شهر 2 (فبراير)</option>
-              <option value="3">شهر 3 (مارس)</option>
-              <option value="4">شهر 4 (أبريل)</option>
-              <option value="5">شهر 5 (مايو)</option>
-              <option value="6">شهر 6 (يونيو)</option>
-              <option value="7">شهر 7 (يوليو)</option>
-              <option value="8">شهر 8 (أغسطس)</option>
-              <option value="9">شهر 9 (سبتمبر)</option>
-              <option value="10">شهر 10 (أكتوبر)</option>
-              <option value="11">شهر 11 (نوفمبر)</option>
-              <option value="12">شهر 12 (ديسمبر)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1">المبلغ المدفوع (ج.م) *</label>
-            <input type="number" id="payAmountInput" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-emerald-400" placeholder="150">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">تاريخ ووقت السداد</label>
-          <input type="datetime-local" id="payTimestamp" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
-        </div>
-
-        <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
-          <button type="button" onclick="closePaymentModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
-          <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">تأكيد الدفع</button>
         </div>
       </form>
     </div>
@@ -762,14 +767,11 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-2 space-x-reverse flex-shrink-0" onclick="event.stopPropagation()">
+          <div class="flex items-center space-x-2 space-x-reverse flex-shrink-0">
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ratio >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">
               ${ratio}%
             </span>
-            <button onclick="openAttendanceModal('${s.id}')" title="تسجيل حضور وتسميع" class="bg-slate-700/80 hover:bg-slate-700 text-amber-400 p-2 rounded-xl text-xs font-bold transition flex items-center justify-center">
-              <i class="fa-solid fa-clipboard-user"></i>
-            </button>
-            <button onclick="deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 p-1.5 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            <button onclick="event.stopPropagation(); deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 p-1.5 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
           </div>
         `;
         grid.appendChild(card);
@@ -787,6 +789,13 @@
       document.getElementById('profParentPhone').textContent = student.parent_phone;
       document.getElementById('profStudentPhone').textContent = student.student_phone || 'غير مسجل';
       document.getElementById('profFee').textContent = `${student.fee || 150} ج.م`;
+
+      // Set Attendance button inside profile
+      const attBtn = document.getElementById('profAttBtn');
+      attBtn.onclick = () => {
+        closeProfileModal();
+        openAttendanceModal(student.id);
+      };
 
       // Attendance List
       const attContainer = document.getElementById('profAttendanceList');
@@ -810,7 +819,7 @@
         });
       }
 
-      // Payments History List
+      // Payments History List (Clickable to Pay)
       const payContainer = document.getElementById('profPaymentsList');
       payContainer.innerHTML = '';
       const payments = student.payments || {};
@@ -821,13 +830,17 @@
         const payDate = isPaid && pay.date ? new Date(pay.date).toLocaleDateString('ar-EG', {month: 'numeric', day: 'numeric'}) : '';
 
         const div = document.createElement('div');
-        div.className = `p-2.5 rounded-xl border text-xs flex flex-col justify-between ${isPaid ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300' : 'bg-slate-900/40 border-slate-800 text-slate-500'}`;
+        div.className = `p-2.5 rounded-xl border text-xs flex flex-col justify-between cursor-pointer transition hover:scale-105 ${isPaid ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300' : 'bg-slate-900/40 border-slate-800 text-slate-500 hover:border-amber-500'}`;
+        div.onclick = () => {
+          closeProfileModal();
+          openPaymentModal(student.id, m);
+        };
         div.innerHTML = `
           <div class="flex justify-between font-bold">
             <span>شهر ${m}</span>
-            <span>${isPaid ? `${paidAmount} ج.م` : 'غير مدفوع'}</span>
+            <span>${isPaid ? `${paidAmount} ج.م` : 'اضغط للدفع +'}</span>
           </div>
-          <span class="text-[10px] mt-1 text-slate-400">${isPaid ? `✓ ${payDate}` : '—'}</span>
+          <span class="text-[10px] mt-1 text-slate-400">${isPaid ? `✓ ${payDate}` : 'غير مدفوع'}</span>
         `;
         payContainer.appendChild(div);
       }
@@ -874,6 +887,7 @@
         renderStudents();
         closeAttendanceModal();
         await saveStudentToSupabase(student);
+        openProfileModal(student.id); // Re-open profile to see update
       }
     }
 
@@ -918,6 +932,51 @@
             await supabaseClient.from('students').delete().eq('id', id);
           } catch(e) {}
         }
+      }
+    }
+
+    function openPaymentModal(studentId, month) {
+      const student = studentsData.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('payStudentId').value = studentId;
+      document.getElementById('payStudentName').value = student.name;
+      document.getElementById('payMonthSelect').value = month;
+
+      const existingPayment = student.payments && student.payments[month];
+      document.getElementById('payAmountInput').value = existingPayment ? (existingPayment.amount || student.fee || 150) : (student.fee || 150);
+
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('payTimestamp').value = now.toISOString().slice(0, 16);
+
+      document.getElementById('paymentModal').classList.remove('hidden');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+    }
+
+    async function handlePaymentSubmit(e) {
+      e.preventDefault();
+      const studentId = document.getElementById('payStudentId').value;
+      const month = document.getElementById('payMonthSelect').value;
+      const timestamp = document.getElementById('payTimestamp').value;
+      const amountPaid = Number(document.getElementById('payAmountInput').value) || 0;
+
+      const student = studentsData.find(s => s.id === studentId);
+      if (student) {
+        if (!student.payments) student.payments = {};
+        student.payments[month] = {
+          is_paid: true,
+          amount: amountPaid,
+          date: timestamp
+        };
+
+        renderStudents();
+        closePaymentModal();
+        await saveStudentToSupabase(student);
+        openProfileModal(student.id); // Re-open profile to see update
       }
     }
 
