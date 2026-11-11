@@ -230,7 +230,7 @@
     </div>
   </div>
 
-  <!-- Modal: Student Full Profile (Includes Attendance Button & Payments) -->
+  <!-- Modal: Student Full Profile (Includes Attendance Button & Clearly visible Payment action) -->
   <div id="profileModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-700 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3 flex-shrink-0">
@@ -273,7 +273,7 @@
         <!-- Payments History & Action -->
         <div class="space-y-2">
           <h4 class="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-            <i class="fa-solid fa-money-check-dollar"></i> الشهور والمدفوعات (اضغط على الشهر للسداد أو التعديل)
+            <i class="fa-solid fa-money-check-dollar"></i> الشهور والمدفوعات (اضغط على أي شهر للسداد الفوري)
           </h4>
           <div id="profPaymentsList" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         </div>
@@ -819,7 +819,7 @@
         });
       }
 
-      // Payments History List (Clickable to Pay)
+      // Payments History List with Clear "اضغط للدفع +" Call to Action
       const payContainer = document.getElementById('profPaymentsList');
       payContainer.innerHTML = '';
       const payments = student.payments || {};
@@ -830,17 +830,17 @@
         const payDate = isPaid && pay.date ? new Date(pay.date).toLocaleDateString('ar-EG', {month: 'numeric', day: 'numeric'}) : '';
 
         const div = document.createElement('div');
-        div.className = `p-2.5 rounded-xl border text-xs flex flex-col justify-between cursor-pointer transition hover:scale-105 ${isPaid ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300' : 'bg-slate-900/40 border-slate-800 text-slate-500 hover:border-amber-500'}`;
+        div.className = `p-3 rounded-xl border text-xs flex flex-col justify-between cursor-pointer transition transform hover:scale-[1.02] ${isPaid ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300' : 'bg-slate-900/90 border-slate-700 text-slate-300 hover:border-amber-500 shadow'}`;
         div.onclick = () => {
           closeProfileModal();
           openPaymentModal(student.id, m);
         };
         div.innerHTML = `
-          <div class="flex justify-between font-bold">
-            <span>شهر ${m}</span>
-            <span>${isPaid ? `${paidAmount} ج.م` : 'اضغط للدفع +'}</span>
+          <div class="flex justify-between items-center font-bold">
+            <span class="text-white text-sm">شهر ${m}</span>
+            <span class="${isPaid ? 'text-emerald-400' : 'text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/30'}">${isPaid ? `${paidAmount} ج.م` : 'اضغط للدفع +'}</span>
           </div>
-          <span class="text-[10px] mt-1 text-slate-400">${isPaid ? `✓ ${payDate}` : 'غير مدفوع'}</span>
+          <span class="text-[11px] mt-2 font-medium ${isPaid ? 'text-emerald-400/80' : 'text-slate-400'}">${isPaid ? `✓ تم الدفع في ${payDate}` : 'غير مدفوع حتى الآن'}</span>
         `;
         payContainer.appendChild(div);
       }
@@ -887,7 +887,7 @@
         renderStudents();
         closeAttendanceModal();
         await saveStudentToSupabase(student);
-        openProfileModal(student.id); // Re-open profile to see update
+        openProfileModal(student.id);
       }
     }
 
@@ -976,7 +976,7 @@
         renderStudents();
         closePaymentModal();
         await saveStudentToSupabase(student);
-        openProfileModal(student.id); // Re-open profile to see update
+        openProfileModal(student.id);
       }
     }
 
