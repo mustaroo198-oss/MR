@@ -1,37 +1,27 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تطبيق مستر أحمد داوود - إدارة الطلاب والمدفوعات</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
     }
     .gold-gradient {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     }
     .gold-text {
       color: #fbbf24;
-    }
-    .card-bg {
-      background-color: #1e293b;
-      border: 1px solid #334155;
-    }
-    .input-style {
-      background-color: #0f172a;
-      border: 1px solid #475569;
-      color: #fff;
-    }
-    .input-style:focus {
-      border-color: #f59e0b;
-      outline: none;
     }
     ::-webkit-scrollbar {
       width: 8px;
@@ -45,13 +35,57 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body class="min-h-screen bg-slate-900 text-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between">
 
   <!-- Application Shell -->
   <div id="app" class="flex-grow flex flex-col">
+    
+    <!-- Sidebar Overlay & Menu -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-slate-800 dark:bg-slate-900 border-l border-slate-700 z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between p-6 shadow-2xl">
+      <div class="space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+          <h3 class="font-bold text-lg text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-gear"></i> الإعدادات والتفضيلات
+          </h3>
+          <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="space-y-3">
+          <label class="block text-xs font-medium text-slate-400">مظهر التطبيق</label>
+          <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-1.5 rounded-xl border border-slate-700">
+            <button onclick="setTheme('dark')" id="themeDarkBtn" class="py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 bg-amber-500 text-slate-950">
+              <i class="fa-solid fa-moon"></i> داكن
+            </button>
+            <button onclick="setTheme('light')" id="themeLightBtn" class="py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-sun"></i> فاتح
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="space-y-3">
+          <label class="block text-xs font-medium text-slate-400">خيارات سريعة</label>
+          <button onclick="syncDataWithServer(true); toggleSidebar();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
+            <i class="fa-solid fa-rotate text-amber-400"></i> إجبار المزامنة السحابية
+          </button>
+          <button onclick="clearCache();" class="w-full py-2.5 px-4 bg-slate-700/60 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-2 transition">
+            <i class="fa-solid fa-broom text-amber-400"></i> تنظيف الكاش المحلي
+          </button>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-700 pt-4">
+        <button onclick="handleLogout()" class="w-full py-2.5 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
     <!-- Auth Screen -->
     <div id="authScreen" class="flex-grow flex items-center justify-center p-4">
-      <div class="card-bg p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700 relative overflow-hidden">
+      <div class="bg-slate-800 dark:bg-slate-900 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-2 h-full gold-gradient"></div>
         <div class="text-center mb-8">
           <div class="w-20 h-20 gold-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -68,7 +102,7 @@
               <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
                 <i class="fa-solid fa-envelope"></i>
               </span>
-              <input type="text" id="loginEmail" required placeholder="أدخل البريد أو اسم المستخدم" class="w-full pr-10 pl-3 py-2.5 rounded-xl input-style text-sm">
+              <input type="text" id="loginEmail" required placeholder="أدخل البريد أو اسم المستخدم" class="w-full pr-10 pl-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
             </div>
           </div>
 
@@ -78,7 +112,7 @@
               <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
                 <i class="fa-solid fa-lock"></i>
               </span>
-              <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pr-10 pl-3 py-2.5 rounded-xl input-style text-sm">
+              <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pr-10 pl-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
             </div>
           </div>
 
@@ -96,7 +130,7 @@
     <!-- Main Dashboard -->
     <div id="dashboardScreen" class="hidden flex-grow flex flex-col">
       <!-- Navbar -->
-      <header class="card-bg border-b border-slate-700 sticky top-0 z-30">
+      <header class="bg-slate-800 dark:bg-slate-900 border-b border-slate-700 sticky top-0 z-30 shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div class="flex items-center space-x-3 space-x-reverse">
             <div class="w-10 h-10 gold-gradient rounded-xl flex items-center justify-center text-slate-900 font-bold">
@@ -111,7 +145,7 @@
           </div>
 
           <div class="flex items-center space-x-2 space-x-reverse">
-            <button onclick="syncDataWithServer(true)" id="syncBtn" title="مزامنة فورية" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
+            <button onclick="syncDataWithServer(true)" id="syncBtn" title="مزامنة فورية" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 px-3 py-2 rounded-xl text-sm border border-slate-700 transition flex items-center space-x-1 space-x-reverse">
               <i class="fa-solid fa-rotate" id="syncIcon"></i>
               <span class="hidden sm:inline">مزامنة</span>
             </button>
@@ -119,8 +153,8 @@
               <i class="fa-solid fa-plus"></i>
               <span>إضافة طالب</span>
             </button>
-            <button onclick="handleLogout()" class="bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl text-sm border border-slate-700 transition">
-              <i class="fa-solid fa-right-from-bracket"></i>
+            <button onclick="toggleSidebar()" class="bg-slate-900/80 text-slate-300 hover:text-white px-3 py-2 rounded-xl text-sm border border-slate-700 transition">
+              <i class="fa-solid fa-bars"></i>
             </button>
           </div>
         </div>
@@ -141,7 +175,7 @@
 
         <!-- Financial Summary Banner -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="card-bg p-4 rounded-2xl border-r-4 border-amber-500 flex items-center justify-between">
+          <div class="bg-slate-800 dark:bg-slate-900 p-4 rounded-2xl border-r-4 border-amber-500 border border-slate-700 flex items-center justify-between">
             <div>
               <span class="text-xs text-slate-400 block font-medium">مجموع مدفوعات الصف الحالي</span>
               <span id="gradeTotalAmount" class="text-xl font-bold text-amber-400">0 ج.م</span>
@@ -149,7 +183,7 @@
             <i class="fa-solid fa-wallet text-2xl text-slate-700"></i>
           </div>
 
-          <div class="card-bg p-4 rounded-2xl border-r-4 border-emerald-500 flex items-center justify-between">
+          <div class="bg-slate-800 dark:bg-slate-900 p-4 rounded-2xl border-r-4 border-emerald-500 border border-slate-700 flex items-center justify-between">
             <div>
               <span class="text-xs text-slate-400 block font-medium">إجمالي تحصيل كل الصفوف</span>
               <span id="allGradesTotalAmount" class="text-xl font-bold text-emerald-400">0 ج.م</span>
@@ -164,12 +198,12 @@
             <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
               <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-            <input type="text" id="searchInput" oninput="renderStudents()" placeholder="ابحث باسم الطالب أو رقم ولي الأمر..." class="w-full pr-10 pl-4 py-3 rounded-xl input-style text-sm">
+            <input type="text" id="searchInput" oninput="renderStudents()" placeholder="ابحث باسم الطالب أو رقم ولي الأمر..." class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
           </div>
 
           <button onclick="openReportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center space-x-2 space-x-reverse shadow-lg">
             <i class="fa-solid fa-chart-pie"></i>
-            <span>تقرير آخر الشهر والشهور المستحقة</span>
+            <span>تقرير الشهر والشهور المستحقة</span>
           </button>
         </div>
 
@@ -185,7 +219,7 @@
         <div id="studentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
         <!-- Empty State -->
-        <div id="emptyState" class="hidden text-center py-12 card-bg rounded-2xl">
+        <div id="emptyState" class="hidden text-center py-12 bg-slate-800 dark:bg-slate-900 rounded-2xl border border-slate-700">
           <i class="fa-solid fa-user-slash text-4xl text-slate-600 mb-3"></i>
           <p class="text-slate-400 text-sm">لا يوجد طلاب مسجلين في هذا الصف حتى الآن.</p>
         </div>
@@ -197,9 +231,55 @@
     Created by Omar Hadwa
   </footer>
 
+  <!-- Modal: Attendance & Quiz -->
+  <div id="attendanceModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-user text-amber-400"></i> تسجيل حضور وتسميع
+        </h3>
+        <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="attendanceForm" onsubmit="handleAttendanceSubmit(event)" class="space-y-4">
+        <input type="hidden" id="attStudentId">
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">اسم الطالب</label>
+          <input type="text" id="attStudentName" disabled class="w-full p-2.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">الحالة</label>
+            <select id="attStatus" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
+              <option value="present">حاضر ✓</option>
+              <option value="absent">غائب ✗</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">درجة التسميع (اختياري)</label>
+            <input type="text" id="attQuizGrade" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none" placeholder="مثال: 9/10">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">تاريخ الحصة</label>
+          <input type="date" id="attDate" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:border-amber-500 focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
+          <button type="button" onclick="closeAttendanceModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
+          <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">حفظ الحصة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: Add Student -->
   <div id="addStudentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="card-bg rounded-2xl max-w-lg w-full p-6 space-y-4 border border-slate-700">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 space-y-4 border border-slate-700">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
         <h3 class="font-bold text-slate-100">إضافة طالب جديد</h3>
         <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -208,24 +288,24 @@
       <form id="addStudentForm" onsubmit="handleAddStudent(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">اسم الطالب ثلاثي *</label>
-          <input type="text" id="newStudentName" required class="w-full p-2.5 rounded-xl input-style text-sm" placeholder="أدخل اسم الطالب">
+          <input type="text" id="newStudentName" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="أدخل اسم الطالب">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">رقم ولي الأمر *</label>
-            <input type="tel" id="newParentPhone" required class="w-full p-2.5 rounded-xl input-style text-sm" placeholder="01XXXXXXXXX">
+            <input type="tel" id="newParentPhone" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="01XXXXXXXXX">
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">رقم هاتف الطالب</label>
-            <input type="tel" id="newStudentPhone" class="w-full p-2.5 rounded-xl input-style text-sm" placeholder="اختياري">
+            <input type="tel" id="newStudentPhone" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="اختياري">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">الصف الدراسي</label>
-            <select id="newStudentGrade" class="w-full p-2.5 rounded-xl input-style text-sm">
+            <select id="newStudentGrade" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
               <option value="1_prep">الأول الإعدادي</option>
               <option value="2_prep">الثاني الإعدادي</option>
               <option value="3_prep">الثالث الإعدادي</option>
@@ -236,17 +316,17 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">المجموعة / الموعد</label>
-            <input type="text" id="newStudentGroup" class="w-full p-2.5 rounded-xl input-style text-sm" placeholder="مثال: السبت 4 عصراً">
+            <input type="text" id="newStudentGroup" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm" placeholder="مثال: السبت 4 عصراً">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">قيمة الاشتراك الشهري (ج.م)</label>
-          <input type="number" id="newStudentFee" value="150" class="w-full p-2.5 rounded-xl input-style text-sm">
+          <input type="number" id="newStudentFee" value="150" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
         </div>
 
         <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
-          <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700">إلغاء</button>
+          <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
           <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">حفظ الطالب فوراً</button>
         </div>
       </form>
@@ -255,7 +335,7 @@
 
   <!-- Modal: Record Payment -->
   <div id="paymentModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="card-bg rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
         <h3 class="font-bold text-slate-100">تسجيل دفع شهر</h3>
         <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -272,7 +352,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">اختر الشهر</label>
-            <select id="payMonthSelect" class="w-full p-2.5 rounded-xl input-style text-sm">
+            <select id="payMonthSelect" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
               <option value="1">شهر 1 (يناير)</option>
               <option value="2">شهر 2 (فبراير)</option>
               <option value="3">شهر 3 (مارس)</option>
@@ -290,17 +370,17 @@
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">المبلغ المدفوع (ج.م) *</label>
-            <input type="number" id="payAmountInput" required class="w-full p-2.5 rounded-xl input-style text-sm font-bold text-emerald-400" placeholder="150">
+            <input type="number" id="payAmountInput" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-emerald-400" placeholder="150">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">تاريخ ووقت السداد</label>
-          <input type="datetime-local" id="payTimestamp" required class="w-full p-2.5 rounded-xl input-style text-sm">
+          <input type="datetime-local" id="payTimestamp" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
         </div>
 
         <div class="pt-2 flex justify-end space-x-2 space-x-reverse">
-          <button type="button" onclick="closePaymentModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700">إلغاء</button>
+          <button type="button" onclick="closePaymentModal()" class="px-4 py-2 bg-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-600">إلغاء</button>
           <button type="submit" class="px-5 py-2 gold-gradient text-slate-900 text-xs font-bold rounded-xl hover:opacity-90">تأكيد الدفع</button>
         </div>
       </form>
@@ -309,11 +389,11 @@
 
   <!-- Modal: Report -->
   <div id="reportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-    <div class="card-bg rounded-2xl max-w-3xl w-full p-6 space-y-4 border border-slate-700 max-h-[90vh] flex flex-col">
+    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl max-w-3xl w-full p-6 space-y-4 border border-slate-700 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3 flex-shrink-0">
         <h3 class="font-bold text-slate-100 flex items-center space-x-2 space-x-reverse">
           <i class="fa-solid fa-file-invoice-dollar text-amber-400"></i>
-          <span>تقرير آخر الشهر والتنبيهات المباشرة</span>
+          <span>تقرير الشهر والتنبيهات المباشرة</span>
         </h3>
         <button onclick="closeReportModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
@@ -321,7 +401,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex-shrink-0">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">الشهر المستهدف</label>
-          <select id="reportMonthSelect" onchange="generateReport()" class="w-full p-2 rounded-lg input-style text-xs">
+          <select id="reportMonthSelect" onchange="generateReport()" class="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs">
             <option value="1">شهر 1 (يناير)</option>
             <option value="2">شهر 2 (فبراير)</option>
             <option value="3">شهر 3 (مارس)</option>
@@ -338,7 +418,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">عرض التقرير لـ</label>
-          <select id="reportScopeSelect" onchange="generateReport()" class="w-full p-2 rounded-lg input-style text-xs">
+          <select id="reportScopeSelect" onchange="generateReport()" class="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs">
             <option value="current">الصف الحالي فقط</option>
             <option value="all">جميع الصفوف الدراسية</option>
           </select>
@@ -387,9 +467,48 @@
     window.addEventListener('DOMContentLoaded', () => {
       checkAuthStatus();
       setupNetworkListeners();
+      initTheme();
     });
 
-    // Monitor internet connection status
+    // Sidebar & Settings Logic
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar.classList.contains('translate-x-full')) {
+        sidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('dawood_theme') || 'dark';
+      setTheme(savedTheme);
+    }
+
+    function setTheme(mode) {
+      if (mode === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeDarkBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 bg-amber-500 text-slate-950";
+        document.getElementById('themeLightBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeLightBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 bg-amber-500 text-slate-950";
+        document.getElementById('themeDarkBtn').className = "py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+      }
+      localStorage.setItem('dawood_theme', mode);
+    }
+
+    function clearCache() {
+      if (confirm('هل ترغب في تنظيف الكاش المحلي واستجلاب البيانات طازجة من السيرفر؟')) {
+        localStorage.removeItem('dawood_students_backup');
+        syncDataWithServer(true);
+        toggleSidebar();
+      }
+    }
+
     function setupNetworkListeners() {
       window.addEventListener('online', () => {
         updateNetworkBadge(true);
@@ -430,7 +549,6 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('dashboardScreen').classList.remove('hidden');
       
-      // Load local cache instantly for zero delay
       const local = localStorage.getItem('dawood_students_backup');
       if (local) {
         studentsData = JSON.parse(local);
@@ -459,7 +577,6 @@
       showAuth();
     }
 
-    // Hybrid Sync: Load from Supabase in background & update local cache
     async function syncDataWithServer(showSpinner = false) {
       const syncIcon = document.getElementById('syncIcon');
       if (showSpinner && syncIcon) syncIcon.classList.add('fa-spin');
@@ -483,20 +600,14 @@
       }
     }
 
-    // Save locally first for instant feedback, then sync to cloud in background
     async function saveStudentToSupabase(student) {
       localStorage.setItem('dawood_students_backup', JSON.stringify(studentsData));
-      
-      if (!navigator.onLine) return; // Will sync automatically when back online
-
+      if (!navigator.onLine) return;
       try {
         await supabaseClient.from('students').upsert(student);
-      } catch (e) {
-        console.error('Background sync queued:', e);
-      }
+      } catch (e) {}
     }
 
-    // Sync pending queue if needed
     async function syncPendingDataToCloud() {
       if (studentsData.length > 0) {
         try {
@@ -573,6 +684,16 @@
 
       filtered.forEach(s => {
         const payments = s.payments || {};
+        const attendance = s.attendance || [];
+        
+        // Attendance Ratio
+        const totalSessions = attendance.length;
+        const presentCount = attendance.filter(a => a.status === 'present').length;
+        const ratio = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 100;
+        
+        // Latest Quiz Grade
+        const latestQuiz = attendance.slice().reverse().find(a => a.quiz);
+
         let monthsHtml = '';
         for (let m = 1; m <= 12; m++) {
           const paid = payments[m];
@@ -592,11 +713,16 @@
         }
 
         const card = document.createElement('div');
-        card.className = 'card-bg rounded-2xl p-5 border border-slate-700/80 shadow-md relative space-y-3';
+        card.className = 'bg-slate-800 dark:bg-slate-900 rounded-2xl p-5 border border-slate-700 shadow-md relative space-y-3';
         card.innerHTML = `
           <div class="flex items-start justify-between">
             <div>
-              <h4 class="font-bold text-white text-base">${s.name}</h4>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-white text-base">${s.name}</h4>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${ratio >= 80 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">
+                  حضور ${ratio}%
+                </span>
+              </div>
               <p class="text-xs text-amber-400 mt-0.5"><i class="fa-solid fa-clock text-[10px] ml-1"></i>${s.group_name || 'بدون مجموعة'}</p>
             </div>
             <button onclick="deleteStudent('${s.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -608,11 +734,16 @@
               <a href="https://wa.me/2${s.parent_phone}" target="_blank" class="text-emerald-400 hover:underline"><i class="fa-brands fa-whatsapp text-sm"></i></a>
             </div>
             ${s.student_phone ? `<div><i class="fa-solid fa-mobile-screen text-slate-500 ml-1"></i>الطالب: <strong class="text-slate-100">${s.student_phone}</strong></div>` : ''}
-            <div><i class="fa-solid fa-money-bill-wave text-slate-500 ml-1"></i>الاشتراك المطلوب: <strong class="text-amber-400">${s.fee || 150} ج.م</strong></div>
+            <div><i class="fa-solid fa-money-bill-wave text-slate-500 ml-1"></i>الاشتراك: <strong class="text-amber-400">${s.fee || 150} ج.م</strong></div>
+            ${latestQuiz ? `<div class="text-indigo-400 font-bold"><i class="fa-solid fa-pen-to-square ml-1"></i>آخر تسميع: ${latestQuiz.quiz} (${latestQuiz.date})</div>` : ''}
           </div>
 
+          <button onclick="openAttendanceModal('${s.id}')" class="w-full py-2 bg-slate-700/60 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-user-check"></i> تسجيل حصة وتسميع
+          </button>
+
           <div>
-            <span class="text-xs font-bold text-slate-400 block mb-1.5">الشهور (1 - 12):</span>
+            <span class="text-xs font-bold text-slate-400 block mb-1.5">سداد الشهور (1 - 12):</span>
             <div class="grid grid-cols-4 gap-1.5">
               ${monthsHtml}
             </div>
@@ -620,6 +751,45 @@
         `;
         grid.appendChild(card);
       });
+    }
+
+    // Attendance Modal Logic
+    function openAttendanceModal(studentId) {
+      const student = studentsData.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('attStudentId').value = studentId;
+      document.getElementById('attStudentName').value = student.name;
+      document.getElementById('attQuizGrade').value = '';
+      document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('attendanceModal').classList.remove('hidden');
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById('attendanceModal').classList.add('hidden');
+    }
+
+    async function handleAttendanceSubmit(e) {
+      e.preventDefault();
+      const studentId = document.getElementById('attStudentId').value;
+      const status = document.getElementById('attStatus').value;
+      const quiz = document.getElementById('attQuizGrade').value.trim();
+      const date = document.getElementById('attDate').value;
+
+      const student = studentsData.find(s => s.id === studentId);
+      if (student) {
+        if (!student.attendance) student.attendance = [];
+        student.attendance.push({
+          status,
+          quiz: quiz || null,
+          date
+        });
+
+        renderStudents();
+        closeAttendanceModal();
+        await saveStudentToSupabase(student);
+      }
     }
 
     function openAddStudentModal() {
@@ -641,7 +811,8 @@
         grade: document.getElementById('newStudentGrade').value,
         group_name: document.getElementById('newStudentGroup').value.trim(),
         fee: Number(document.getElementById('newStudentFee').value) || 150,
-        payments: {}
+        payments: {},
+        attendance: []
       };
 
       studentsData.push(newStudent);
@@ -705,7 +876,6 @@
 
         renderStudents();
         closePaymentModal();
-
         await saveStudentToSupabase(student);
       }
     }
@@ -758,7 +928,7 @@
           const message = encodeURIComponent(`السلام عليكم ورحمة الله وبركاته، تحية طيبة لولي أمر الطالب (${s.name}) مع مستر أحمد داوود. نود تذكيركم بضرورة سداد المصروفات المتبقية عن شهر (${monthsText}). شاكرين تعاونكم.`);
           
           const div = document.createElement('div');
-          div.className = 'flex items-center justify-between card-bg p-3 rounded-xl border border-red-900/40 text-xs';
+          div.className = 'flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-red-900/40 text-xs';
           div.innerHTML = `
             <div>
               <div class="font-bold text-slate-100">${s.name} <span class="text-[10px] text-slate-400">(${gradeNames[s.grade]})</span></div>
@@ -785,7 +955,7 @@
           const paidAmount = payInfo.amount || s.fee || 150;
 
           const div = document.createElement('div');
-          div.className = 'flex items-center justify-between card-bg p-3 rounded-xl border border-emerald-900/40 text-xs';
+          div.className = 'flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-emerald-900/40 text-xs';
           div.innerHTML = `
             <div>
               <div class="font-bold text-slate-100">${s.name} <span class="text-[10px] text-slate-400">(${gradeNames[s.grade]})</span></div>
